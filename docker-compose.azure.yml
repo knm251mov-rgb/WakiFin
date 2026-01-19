@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  # Backend API (для Azure Container Instances)
+  api:
+    image: knm251mov/wakifin-api:latest
+    container_name: wakifin-api
+    restart: always
+    ports:
+      - "3001:3001"
+    environment:
+      PORT: "3001"
+      HOST: "0.0.0.0"
+      # MongoDB Atlas Connection String
+      MONGO_URL: "mongodb+srv://knm211_mov:adminadmin@cluster0.xyz4bnp.mongodb.net/wakifin?retryWrites=true&w=majority"
+      NODE_ENV: "production"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/pages"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1.5G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # Frontend (для Azure App Service)
+  frontend:
+    image: knm251mov/wakifin-frontend:latest
+    container_name: wakifin-frontend
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      # ✅ Використовуємо Cloudflare Worker замість прямої IP
+      VITE_API_BASE: "https://wakifin-api.knm251-mov.workers.dev"
+      NODE_ENV: "production"
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1.5G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
