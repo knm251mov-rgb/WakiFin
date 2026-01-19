@@ -1,0 +1,95 @@
+name: Deploy Backend to Azure
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'api/**'
+      - '.github/workflows/deploy-backend.yml'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+
+    - name: Build and push API image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./api
+        file: ./api/Dockerfile
+        push: true
+        tags: ${{ secrets.DOCKER_USERNAME }}/wakifin-api:latest
+
+    - name: Azure Login
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Get API IP
+      id: get-ip
+      run: |
+        API_IP=$(az container show \
+          --resource-group WakiFin \
+          --name wakifin-api \
+          --query ipAddress.ip \
+          --output tsv 2>/dev/null || echo "")
+        echo "api_ip=$API_IP" >> $GITHUB_OUTPUT
+
+    - name: Delete old container
+      run: |
+        az container delete --resource-group WakiFin --name wakifin-api --yes || true
+        sleep 10
+
+    - name: Deploy to Azure Container Instances
+      run: |
+        az container create \
+          --resource-group WakiFin \
+          --name wakifin-api \
+          --image ${{ secrets.DOCKER_USERNAME }}/wakifin-api:latest \
+          --dns-name-label wakifin-api-dns \
+          --ports 3001 \
+          --protocol TCP \
+          --os-type Linux \
+          --cpu 1 \
+          --memory 1.5 \
+          --environment-variables \
+            PORT=3001 \
+            HOST=0.0.0.0 \
+            "MONGO_URL=${{ secrets.MONGO_URL }}" \
+            NODE_ENV=production \
+          --location italynorth \
+          --registry-login-server index.docker.io \
+          --registry-username ${{ secrets.DOCKER_USERNAME }} \
+          --registry-password "${{ secrets.DOCKER_PASSWORD }}"
+
+    - name: Wait for container to be ready
+      run: sleep 30
+
+    - name: Get new API IP
+      id: new-ip
+      run: |
+        API_IP=$(az container show \
+          --resource-group WakiFin \
+          --name wakifin-api \
+          --query ipAddress.ip \
+          --output tsv)
+        echo "api_ip=$API_IP" >> $GITHUB_OUTPUT
+        echo "✅ API deployed at http://$API_IP:3001"
+
+    - name: Display API IP
+      run: |
+        echo "🌐 New API IP: ${{ steps.new-ip.outputs.api_ip }}"
+        echo "⚠️ Update cloudflare-worker.js with this IP if it changed"
