@@ -4,7 +4,7 @@ export default function About() {
   return (
     <div className="about-page">
       <section className="about-hero">
-        <h1>About WakiFin</h1>
+        <h1>About</h1>
         <p>
           WakiFin is a web-oriented information system designed for managing
           users, pages, and structured content with a focus on simplicity,
