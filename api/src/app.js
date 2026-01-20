@@ -8,12 +8,25 @@ const { port, host, mongoURL } = require('./configuration/index');
 
 const app = express();
 
-app.use(cors());
+// ✅ CORS налаштування
+app.use(cors({
+  origin: '*', // Дозволити всім
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
 app.use(express.json());
+
+// ✅ Маршрути
 app.use('/users', userRouter);
 app.use("/pages", pageRouter);
 app.use("/auth", authRouter);
 
+// ✅ Health check
+app.get('/health', (req, res) => {
+  res.json({ status: 'OK' });
+});
 
 const startServer = () => {
   app.listen(port, host, () => {

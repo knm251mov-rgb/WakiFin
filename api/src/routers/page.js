@@ -15,7 +15,7 @@ router.post("/", auth, async (req, res) => {
     });
 
     await page.save();
-    res.json(page);
+    res.status(201).json(page);
   } catch (e) {
     res.status(400).json({ message: e.message });
   }
@@ -23,20 +23,31 @@ router.post("/", auth, async (req, res) => {
 
 /* ---------------- GET ALL PAGES ---------------- */
 router.get("/", async (req, res) => {
-  const pages = await Page.find()
-    .populate("author", "firstName lastName email")
-    .sort({ createdAt: -1 });
+  try {
+    const pages = await Page.find()
+      .populate("author", "firstName lastName email")
+      .sort({ createdAt: -1 });
 
-  res.json(pages);
+    res.json(pages);
+  } catch (e) {
+    res.status(400).json({ message: e.message });
+  }
 });
 
 /* ---------------- GET SINGLE PAGE ---------------- */
 router.get("/:id", async (req, res) => {
-  const page = await Page.findById(req.params.id)
-    .populate("author", "firstName lastName email");
+  try {
+    const page = await Page.findById(req.params.id)
+      .populate("author", "firstName lastName email");
 
-  if (!page) return res.status(404).json({ message: "Page not found" });
-  res.json(page);
+    if (!page) {
+      return res.status(404).json({ message: "Page not found" });
+    }
+
+    res.json(page);
+  } catch (e) {
+    res.status(400).json({ message: e.message });
+  }
 });
 
 /* ---------------- UPDATE PAGE ---------------- */
@@ -56,9 +67,9 @@ router.put("/:id", auth, async (req, res) => {
       });
     }
 
-    page.title = req.body.title;
-    page.summary = req.body.summary;
-    page.content = req.body.content;
+    page.title = req.body.title || page.title;
+    page.summary = req.body.summary || page.summary;
+    page.content = req.body.content || page.content;
 
     await page.save();
     res.json(page);
@@ -70,20 +81,26 @@ router.put("/:id", auth, async (req, res) => {
 
 /* ---------------- DELETE PAGE ---------------- */
 router.delete("/:id", auth, async (req, res) => {
-  const page = await Page.findById(req.params.id);
-  if (!page) return res.status(404).json({ message: "Page not found" });
+  try {
+    const page = await Page.findById(req.params.id);
+    if (!page) {
+      return res.status(404).json({ message: "Page not found" });
+    }
 
-  const isAuthor = page.author.toString() === req.user.id;
-  const isAdmin = req.user.role === "admin";
+    const isAuthor = page.author.toString() === req.user.id;
+    const isAdmin = req.user.role === "admin";
 
-  if (!isAuthor && !isAdmin) {
-    return res.status(403).json({
-      message: "You have no permission to delete this page",
-    });
+    if (!isAuthor && !isAdmin) {
+      return res.status(403).json({
+        message: "You have no permission to delete this page",
+      });
+    }
+
+    await Page.findByIdAndDelete(req.params.id);
+    res.json({ message: "Page deleted successfully" });
+  } catch (e) {
+    res.status(400).json({ message: e.message });
   }
-
-  await page.deleteOne();
-  res.json({ message: "Page deleted" });
 });
 
 
