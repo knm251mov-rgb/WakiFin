@@ -14,7 +14,7 @@ import PageEdit from "./pages/PageEdit";
 import Login from "./pages/Login";
 import Registration from "./pages/Registration";
 
-export const API_URL = "https://api-service-287260546677.us-central1.run.app/users";
+export const API_URL = import.meta.env.VITE_API_BASE || "https://wakifin-api.knm251-mov.workers.dev";
 
 function AppContent() {
   const [user, setUser] = useState(null);
