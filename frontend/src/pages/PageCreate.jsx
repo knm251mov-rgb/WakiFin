@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
-const API = import.meta.env.VITE_API_BASE || "http://localhost:3001";
+
+const API = import.meta.env.VITE_API_BASE || "https://wakifin-api.knm251-mov.workers.dev";
 
 export default function PageCreate() {
   const [title, setTitle] = useState("");
@@ -14,16 +15,27 @@ export default function PageCreate() {
   };
 
   const createPage = async () => {
-    await fetch(`${API}/pages`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer " + localStorage.getItem("token")
-      },
-      body: JSON.stringify({ title, summary, content }),
-    });
+    try {
+      const response = await fetch(`${API}/pages`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + localStorage.getItem("token")
+        },
+        body: JSON.stringify({ title, summary, content }),
+      });
 
-    window.location.href = "/pages";
+      const data = await response.json();
+      
+      if (response.ok) {
+        console.log("✅ Page saved:", data);
+        window.location.href = "/pages";
+      } else {
+        console.error("❌ Error:", data.message);
+      }
+    } catch (error) {
+      console.error("❌ Fetch error:", error);
+    }
   };
 
   return (

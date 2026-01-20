@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams } from "react-router-dom";
 
-const API = import.meta.env.VITE_API_BASE || "http://localhost:3001";
+const API = import.meta.env.VITE_API_BASE || "https://wakifin-api.knm251-mov.workers.dev";
 
 export default function PageEdit() {
   const { id } = useParams();
@@ -38,16 +38,25 @@ export default function PageEdit() {
   };
 
   const updatePage = async () => {
-    await fetch(`${API}/pages/${id}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer " + localStorage.getItem("token")
-      },
-      body: JSON.stringify({ title, summary, content }),
-    });
+    try {
+      const response = await fetch(`${API}/pages/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + localStorage.getItem("token")
+        },
+        body: JSON.stringify({ title, summary, content }),
+      });
 
-    window.location.href = `/pages/${id}`;
+      if (response.ok) {
+        console.log("✅ Page updated");
+        window.location.href = `/pages/${id}`;
+      } else {
+        console.error("❌ Update failed");
+      }
+    } catch (error) {
+      console.error("❌ Error:", error);
+    }
   };
 
   return (
