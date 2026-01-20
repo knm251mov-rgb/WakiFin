@@ -18,6 +18,13 @@ app.use(cors({
 
 app.use(express.json());
 
+// ✅ Auth маршрути (без авторизації)
+app.use("/auth", authRouter);
+
+// ✅ Інші маршрути
+app.use('/users', userRouter);
+app.use("/pages", pageRouter);
+
 // ✅ Health check endpoint
 app.get('/health', (req, res) => {
   res.json({ 
@@ -25,11 +32,6 @@ app.get('/health', (req, res) => {
     mongo: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
   });
 });
-
-// ✅ Маршрути
-app.use('/users', userRouter);
-app.use("/pages", pageRouter);
-app.use("/auth", authRouter);
 
 // ✅ Health check
 app.get('/health', (req, res) => {
