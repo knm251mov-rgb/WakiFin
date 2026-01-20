@@ -550,3 +550,36 @@ h3 {
     width: 100%;
   }
 }
+
+.block {
+  padding: 14px 18px;
+  border-radius: 8px;
+  margin: 14px 0;
+}
+
+.block.info {
+  background: #e0f2fe;
+  border-left: 4px solid #0284c7;
+}
+
+.block.warning {
+  background: #fff7ed;
+  border-left: 4px solid #ea580c;
+}
+
+.block.lore {
+  background: #fdf4ff;
+  border-left: 4px solid #a21caf;
+  font-style: italic;
+}
+
+.block.spoiler {
+  background: #111;
+  color: transparent;
+  border-left: 4px solid #444;
+  cursor: pointer;
+}
+
+.block.spoiler:hover {
+  color: white;
+}
