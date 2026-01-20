@@ -1,6 +1,6 @@
 /**
  * WakiFin Cloudflare Worker
- * Проксує запити до Azure API контейнера
+ * Проксує запити до Azure API контейнера через DNS ім'я
  * Розв'язує CORS та забезпечує HTTPS
  */
 
@@ -9,8 +9,8 @@ addEventListener('fetch', event => {
 })
 
 async function handleRequest(request) {
-  // ⚠️ ОБОВ'ЯЗКОВО замініть на вашу реальну API IP адресу
-  const apiUrl = 'http://1.2.3.4:3001'
+  // ✅ Використовуємо DNS ім'я замість IP
+  const apiUrl = 'http://wakifin-api-dns.italynorth.azurecontainer.io:3001'
   
   const url = new URL(request.url)
   const targetUrl = apiUrl + url.pathname + url.search
