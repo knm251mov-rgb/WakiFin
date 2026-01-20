@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-const API = import.meta.env.VITE_API_BASE;
+
+const API = import.meta.env.VITE_API_BASE || "https://wakifin-api.knm251-mov.workers.dev";
 
 export default function Login({ onLogin }) {
   const navigate = useNavigate();
@@ -12,6 +13,10 @@ export default function Login({ onLogin }) {
     e.preventDefault();
     setError(null);
 
+    console.log("\n========== LOGIN START ==========");
+    console.log("Email:", email);
+    console.log("onLogin type:", typeof onLogin);
+
     try {
       const res = await fetch(`${API}/auth/login`, {
         method: "POST",
@@ -21,17 +26,44 @@ export default function Login({ onLogin }) {
 
       const data = await res.json();
 
+      console.log("Status:", res.status);
+      console.log("Data:", data);
+
       if (!res.ok) {
-        // Якщо сервер поверне помилку (навіть 400), вона буде показана тут.
-        // Але помилки "Email is not verified" більше не буде.
-        const fullError = JSON.stringify(data, null, 2);
-        return setError(fullError);
+        console.error("Login failed");
+        return setError(JSON.stringify(data, null, 2));
       }
 
+      console.log("\n✅ LOGIN SUCCESSFUL");
+      console.log("Token:", data.token?.substring(0, 40) + "...");
+      console.log("User:", data.user);
+
+      // ✅ STEP 1: Store in localStorage
+      console.log("\n📝 STORING IN LOCALSTORAGE...");
       localStorage.setItem("token", data.token);
-      if (onLogin) onLogin(data.user);
+      localStorage.setItem("user", JSON.stringify(data.user));
+
+      // ✅ STEP 2: Verify stored
+      const storedToken = localStorage.getItem("token");
+      const storedUser = localStorage.getItem("user");
+      console.log("Stored token:", storedToken ? `${storedToken.substring(0, 40)}...` : "❌ NULL");
+      console.log("Stored user:", storedUser ? "✅" : "❌ NULL");
+
+      // ✅ STEP 3: Call callback
+      console.log("\n📞 CALLING onLogin callback...");
+      if (onLogin) {
+        console.log("Calling with:", { user: data.user, token: data.token?.substring(0, 40) + "..." });
+        onLogin(data.user, data.token);
+        console.log("✅ onLogin callback completed");
+      } else {
+        console.error("❌ onLogin is NOT a function!");
+      }
+
+      console.log("\n🔄 NAVIGATING TO /");
       navigate("/");
+      console.log("========== LOGIN END ==========\n");
     } catch (err) {
+      console.error("❌ EXCEPTION:", err);
       setError(`Client error: ${err.message}`);
     }
   };

@@ -21,20 +21,46 @@ function AppContent() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const saved = localStorage.getItem("user");
-    if (saved) setUser(JSON.parse(saved));
+    console.log("\n🔍 App.jsx useEffect - Checking localStorage on startup");
+    const savedUser = localStorage.getItem("user");
+    const token = localStorage.getItem("token");
+    
+    console.log("  User in localStorage:", savedUser ? "✅" : "❌");
+    console.log("  Token in localStorage:", token ? `${token.substring(0, 40)}...` : "❌");
+    
+    if (savedUser && token) {
+      try {
+        const parsed = JSON.parse(savedUser);
+        console.log("  Setting user state:", parsed);
+        setUser(parsed);
+      } catch (e) {
+        console.error("  Parse error:", e);
+      }
+    }
   }, []);
 
   const handleLogin = (u, token) => {
+    console.log("\n========== handleLogin in App.jsx ==========");
+    console.log("User param:", u);
+    console.log("Token param:", token?.substring(0, 40) + "...");
+    
     setUser(u);
     localStorage.setItem("user", JSON.stringify(u));
     localStorage.setItem("token", token);
+    
+    console.log("After setting:");
+    console.log("  localStorage.token:", localStorage.getItem("token")?.substring(0, 40) + "...");
+    console.log("  localStorage.user:", localStorage.getItem("user")?.substring(0, 50) + "...");
+    console.log("========== handleLogin END ==========\n");
+    
     navigate("/");
   };
 
   const handleLogout = () => {
+    console.log("🚪 Logout");
     setUser(null);
-    localStorage.clear();
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
     navigate("/login");
   };
 
@@ -48,7 +74,7 @@ function AppContent() {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login onLogin={handleLogin} />} />
           <Route path="/register" element={<Registration />} />
-          <Route path="/profile" element={<Profile user={user} />} />
+          <Route path="/profile" element={<Profile user={user} onLogout={handleLogout} />} />
           <Route path="/users" element={<Users />} />
           <Route path="/about" element={<About />} />
           <Route path="/pages" element={<PagesList />} />
