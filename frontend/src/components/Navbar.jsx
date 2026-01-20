@@ -6,7 +6,10 @@ export default function Navbar({ user, onLogout }) {
   const [open, setOpen] = useState(false);
   const menuRef = useRef(null);
 
-  // Закриваємо dropdown при кліку ПОЗА ним (НЕ mousedown!)
+  // 🔥 перевірка premium
+  const isPremium = localStorage.getItem("premium") === "true";
+
+  // Закриваємо dropdown при кліку поза ним
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (menuRef.current && !menuRef.current.contains(e.target)) {
@@ -24,13 +27,30 @@ export default function Navbar({ user, onLogout }) {
 
       <ul className="navbar-links">
         <li><Link to="/">Home</Link></li>
+
         {user?.role === "admin" && (
           <li>
             <Link to="/users">Users</Link>
           </li>
         )}
+
         <li><Link to="/pages">Pages</Link></li>
         <li><Link to="/about">About</Link></li>
+
+        {/* ⭐ PREMIUM */}
+        {user && !isPremium && (
+          <li>
+            <Link
+              to="/premium"
+              style={{
+                color: "gold",
+                fontWeight: "bold"
+              }}
+            >
+              ⭐ Get Premium
+            </Link>
+          </li>
+        )}
 
         {!user ? (
           <>
@@ -44,6 +64,17 @@ export default function Navbar({ user, onLogout }) {
               onClick={() => setOpen(o => !o)}
             >
               {user.email}
+              {isPremium && (
+                <span
+                  style={{
+                    marginLeft: "6px",
+                    color: "gold",
+                    fontWeight: "bold"
+                  }}
+                >
+                  ⭐
+                </span>
+              )}
             </button>
 
             {open && (
@@ -55,6 +86,16 @@ export default function Navbar({ user, onLogout }) {
                 >
                   Profile
                 </Link>
+
+                {isPremium && (
+                  <Link
+                    to="/premium/content"
+                    className="dropdown-item"
+                    onClick={() => setOpen(false)}
+                  >
+                    Premium Content
+                  </Link>
+                )}
 
                 <button
                   className="dropdown-item logout"
