@@ -13,6 +13,11 @@ import PageView from "./pages/PageView";
 import PageEdit from "./pages/PageEdit";
 import Login from "./pages/Login";
 import Registration from "./pages/Registration";
+import Premium from "./pages/Premium";
+import PremiumCheckout from "./pages/PremiumCheckout";
+import PremiumContent from "./pages/PremiumContent";
+import RequirePremium from "./components/RequirePremium";
+
 
 export const API_URL = import.meta.env.VITE_API_BASE || "https://wakifin-api.knm251-mov.workers.dev";
 
@@ -71,6 +76,18 @@ function AppContent() {
       {/* 🔥 ВАЖЛИВО: відступ під fixed navbar */}
       <div className="app-content">
         <Routes>
+          <Route path="/premium" element={<Premium />} />
+  <Route path="/premium/checkout" element={<PremiumCheckout onSuccess={() => navigate("/premium/content")} />} />
+
+  <Route
+    path="/premium/content"
+    element={
+      <RequirePremium>
+        <PremiumContent />
+      </RequirePremium>
+    }
+  />
+
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login onLogin={handleLogin} />} />
           <Route path="/register" element={<Registration />} />
