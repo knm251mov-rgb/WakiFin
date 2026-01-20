@@ -19,53 +19,27 @@ import PremiumContent from "./pages/PremiumContent";
 import RequirePremium from "./components/RequirePremium";
 
 
-export const API_URL = import.meta.env.VITE_API_BASE || "https://wakifin-api.knm251-mov.workers.dev";
+export const API_URL = "https://api-service-287260546677.us-central1.run.app/users";
 
 function AppContent() {
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    console.log("\n🔍 App.jsx useEffect - Checking localStorage on startup");
-    const savedUser = localStorage.getItem("user");
-    const token = localStorage.getItem("token");
-    
-    console.log("  User in localStorage:", savedUser ? "✅" : "❌");
-    console.log("  Token in localStorage:", token ? `${token.substring(0, 40)}...` : "❌");
-    
-    if (savedUser && token) {
-      try {
-        const parsed = JSON.parse(savedUser);
-        console.log("  Setting user state:", parsed);
-        setUser(parsed);
-      } catch (e) {
-        console.error("  Parse error:", e);
-      }
-    }
+    const saved = localStorage.getItem("user");
+    if (saved) setUser(JSON.parse(saved));
   }, []);
 
   const handleLogin = (u, token) => {
-    console.log("\n========== handleLogin in App.jsx ==========");
-    console.log("User param:", u);
-    console.log("Token param:", token?.substring(0, 40) + "...");
-    
     setUser(u);
     localStorage.setItem("user", JSON.stringify(u));
     localStorage.setItem("token", token);
-    
-    console.log("After setting:");
-    console.log("  localStorage.token:", localStorage.getItem("token")?.substring(0, 40) + "...");
-    console.log("  localStorage.user:", localStorage.getItem("user")?.substring(0, 50) + "...");
-    console.log("========== handleLogin END ==========\n");
-    
     navigate("/");
   };
 
   const handleLogout = () => {
-    console.log("🚪 Logout");
     setUser(null);
-    localStorage.removeItem("user");
-    localStorage.removeItem("token");
+    localStorage.clear();
     navigate("/login");
   };
 
@@ -76,8 +50,29 @@ function AppContent() {
       {/* 🔥 ВАЖЛИВО: відступ під fixed navbar */}
       <div className="app-content">
         <Routes>
-          <Route path="/premium" element={<Premium />} />
-  <Route path="/premium/checkout" element={<PremiumCheckout onSuccess={() => navigate("/premium/content")} />} />
+  <Route path="/" element={<Home />} />
+  <Route path="/login" element={<Login onLogin={handleLogin} />} />
+  <Route path="/register" element={<Registration />} />
+  <Route path="/profile" element={<Profile user={user} onLogout={handleLogout} />} />
+  <Route path="/users" element={<Users />} />
+  <Route path="/about" element={<About />} />
+
+  <Route path="/pages" element={<PagesList />} />
+  <Route path="/pages/create" element={<PageCreate />} />
+  <Route path="/pages/:id" element={<PageView />} />
+  <Route path="/pages/:id/edit" element={<PageEdit />} />
+
+  {/* 🔥 PREMIUM */}
+  <Route path="/premium" element={<Premium />} />
+
+  <Route
+    path="/premium/checkout"
+    element={
+      <PremiumCheckout
+        onSuccess={() => navigate("/premium/content")}
+      />
+    }
+  />
 
   <Route
     path="/premium/content"
@@ -87,18 +82,8 @@ function AppContent() {
       </RequirePremium>
     }
   />
+</Routes>
 
-          <Route path="/" element={<Home />} />
-          <Route path="/login" element={<Login onLogin={handleLogin} />} />
-          <Route path="/register" element={<Registration />} />
-          <Route path="/profile" element={<Profile user={user} onLogout={handleLogout} />} />
-          <Route path="/users" element={<Users />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/pages" element={<PagesList />} />
-          <Route path="/pages/create" element={<PageCreate />} />
-          <Route path="/pages/:id" element={<PageView />} />
-          <Route path="/pages/:id/edit" element={<PageEdit />} />
-        </Routes>
       </div>
     </>
   );
