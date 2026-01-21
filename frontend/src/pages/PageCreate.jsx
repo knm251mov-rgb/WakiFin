@@ -1,56 +1,64 @@
 import { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 
 const API = import.meta.env.VITE_API_BASE;
 
 export default function PageCreate() {
-  const navigate = useNavigate();
-
   const [title, setTitle] = useState("");
   const [summary, setSummary] = useState("");
   const [content, setContent] = useState("");
   const [preview, setPreview] = useState(false);
   const [user, setUser] = useState(null);
 
+  // premium styles
+  const [textColor, setTextColor] = useState("#000000");
+  const [bgColor, setBgColor] = useState("#ffffff");
+
   const editorRef = useRef(null);
 
-  /* ---------- AUTH ---------- */
+  /* 🔐 USER FROM JWT */
   useEffect(() => {
     const token = localStorage.getItem("token");
-    if (!token) {
-      navigate("/login");
-      return;
-    }
+    if (!token) return;
 
     try {
       const payload = JSON.parse(atob(token.split(".")[1]));
       setUser(payload);
-    } catch {
-      navigate("/login");
-    }
-  }, [navigate]);
+    } catch {}
+  }, []);
 
   const isPremium = user?.role === "premium" || user?.role === "admin";
 
   /* ---------- FORMAT ---------- */
-  const cmd = (command, value = null) => {
-    document.execCommand(command, false, value);
-    editorRef.current?.focus();
+  const cmd = (c, v = null) => {
+    document.execCommand(c, false, v);
+    editorRef.current.focus();
+  };
+
+  /* ---------- PREMIUM: TEXT COLOR ---------- */
+  const applyTextColor = () => {
+    if (!isPremium) return;
+    document.execCommand("foreColor", false, textColor);
+    editorRef.current.focus();
+  };
+
+  /* ---------- PREMIUM: BACKGROUND COLOR ---------- */
+  const applyBackgroundColor = () => {
+    if (!isPremium) return;
+    editorRef.current.style.backgroundColor = bgColor;
   };
 
   /* ---------- PREMIUM: TABLE ---------- */
   const insertTable = () => {
-    if (!isPremium) return;
+    if (!isPremium) return alert("Premium only");
 
-    const rows = Number(prompt("Rows:", 2));
-    const cols = Number(prompt("Columns:", 2));
-    if (!rows || !cols) return;
+    const rows = +prompt("Rows:", 2);
+    const cols = +prompt("Cols:", 2);
 
     let html = "<table border='1'><tbody>";
     for (let r = 0; r < rows; r++) {
       html += "<tr>";
       for (let c = 0; c < cols; c++) {
-        html += "<td>Cell</td>";
+        html += "<td>...</td>";
       }
       html += "</tr>";
     }
@@ -59,20 +67,20 @@ export default function PageCreate() {
     document.execCommand("insertHTML", false, html);
   };
 
-  /* ---------- PREMIUM: BLOCKS ---------- */
+  /* ---------- PREMIUM: BLOCK ---------- */
   const insertBlock = (type) => {
-    if (!isPremium) return;
+    if (!isPremium) return alert("Premium only");
 
     const html = `
-      <div class="custom-block ${type}">
-        <strong>${type.toUpperCase()}</strong>
+      <div class="block ${type}">
+        <strong>${type.toUpperCase()}:</strong>
         <p>Text...</p>
       </div>
     `;
     document.execCommand("insertHTML", false, html);
   };
 
-  /* ---------- PREMIUM: IMAGE DROP ---------- */
+  /* ---------- PREMIUM: IMAGE DRAG ---------- */
   const onDropImage = (e) => {
     if (!isPremium) return;
 
@@ -85,7 +93,7 @@ export default function PageCreate() {
       document.execCommand(
         "insertHTML",
         false,
-        `<img src="${reader.result}" alt="" />`
+        `<img src="${reader.result}" />`
       );
     };
     reader.readAsDataURL(file);
@@ -93,6 +101,12 @@ export default function PageCreate() {
 
   /* ---------- SAVE ---------- */
   const createPage = async () => {
+    const styledContent = `
+      <div style="background:${bgColor}; color:${textColor}; padding:20px">
+        ${content}
+      </div>
+    `;
+
     const res = await fetch(`${API}/pages`, {
       method: "POST",
       headers: {
@@ -102,40 +116,33 @@ export default function PageCreate() {
       body: JSON.stringify({
         title,
         summary,
-        content,
+        content: styledContent
       }),
     });
 
-    if (res.ok) navigate("/pages");
+    if (res.ok) location.href = "/pages";
   };
 
   return (
     <div className="page-container">
-      <h1>Create page</h1>
-
-      {!isPremium && (
-        <div className="premium-hint">
-          Some editor features are available only for premium users.
-        </div>
-      )}
+      <h1>Create Page</h1>
 
       <input
         placeholder="Title"
         value={title}
-        onChange={(e) => setTitle(e.target.value)}
+        onChange={e => setTitle(e.target.value)}
       />
-
       <input
         placeholder="Summary"
         value={summary}
-        onChange={(e) => setSummary(e.target.value)}
+        onChange={e => setSummary(e.target.value)}
       />
 
       {/* TOOLBAR */}
       <div className="toolbar">
-        <button onClick={() => cmd("bold")}>Bold</button>
-        <button onClick={() => cmd("italic")}>Italic</button>
-        <button onClick={() => cmd("underline")}>Underline</button>
+        <button onClick={() => cmd("bold")}>B</button>
+        <button onClick={() => cmd("italic")}>I</button>
+        <button onClick={() => cmd("underline")}>U</button>
 
         {isPremium && (
           <>
@@ -144,12 +151,35 @@ export default function PageCreate() {
             <button onClick={() => insertBlock("warning")}>Warning</button>
             <button onClick={() => insertBlock("lore")}>Lore</button>
             <button onClick={() => insertBlock("spoiler")}>Spoiler</button>
-            <button onClick={() => setPreview((p) => !p)}>
-              {preview ? "Edit" : "Preview"}
-            </button>
+            <button onClick={() => setPreview(!preview)}>Preview</button>
           </>
         )}
       </div>
+
+      {/* PREMIUM COLORS */}
+      {isPremium && (
+        <div className="premium-style-panel">
+          <label>
+            Text color:
+            <input
+              type="color"
+              value={textColor}
+              onChange={e => setTextColor(e.target.value)}
+            />
+            <button onClick={applyTextColor}>Apply</button>
+          </label>
+
+          <label>
+            Page background:
+            <input
+              type="color"
+              value={bgColor}
+              onChange={e => setBgColor(e.target.value)}
+            />
+            <button onClick={applyBackgroundColor}>Apply</button>
+          </label>
+        </div>
+      )}
 
       {/* EDITOR */}
       {!preview ? (
@@ -157,9 +187,10 @@ export default function PageCreate() {
           ref={editorRef}
           contentEditable
           className="editor"
-          onInput={(e) => setContent(e.currentTarget.innerHTML)}
+          style={{ backgroundColor: bgColor, color: textColor }}
+          onInput={e => setContent(e.currentTarget.innerHTML)}
           onDrop={onDropImage}
-          onDragOver={(e) => e.preventDefault()}
+          onDragOver={e => e.preventDefault()}
         />
       ) : (
         <div
