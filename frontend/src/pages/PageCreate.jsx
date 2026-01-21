@@ -1,4 +1,5 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+
 const API = import.meta.env.VITE_API_BASE || "http://localhost:3001";
 
 export default function PageCreate() {
@@ -6,11 +7,25 @@ export default function PageCreate() {
   const [summary, setSummary] = useState("");
   const [content, setContent] = useState("");
 
+  // premium
+  const [isPremium, setIsPremium] = useState(false);
+  const [textColor, setTextColor] = useState("#000000");
+  const [bgColor, setBgColor] = useState("#ffffff");
+
   const editorRef = useRef(null);
+
+  useEffect(() => {
+    setIsPremium(localStorage.getItem("premium") === "true");
+  }, []);
 
   const format = (cmd, val = null) => {
     document.execCommand(cmd, false, val);
     editorRef.current.focus();
+  };
+
+  const applyTextColor = (color) => {
+    format("foreColor", color);
+    setTextColor(color);
   };
 
   const createPage = async () => {
@@ -20,7 +35,14 @@ export default function PageCreate() {
         "Content-Type": "application/json",
         "Authorization": "Bearer " + localStorage.getItem("token")
       },
-      body: JSON.stringify({ title, summary, content }),
+      body: JSON.stringify({
+        title,
+        summary,
+        content,
+        styles: isPremium
+          ? { textColor, bgColor }
+          : null
+      }),
     });
 
     window.location.href = "/pages";
@@ -47,7 +69,7 @@ export default function PageCreate() {
         <button onClick={() => format("underline")}>U</button>
         <button onClick={() => format("strikeThrough")}>S</button>
 
-        <button onClick={() => format("insertUnorderedList")}>• List</button>
+        <button onClick={() => format("insertUnorderedList")}>List</button>
         <button onClick={() => format("insertOrderedList")}>1. List</button>
 
         <button onClick={() => format("justifyLeft")}>Left</button>
@@ -57,15 +79,53 @@ export default function PageCreate() {
         <button onClick={() => {
           const url = prompt("URL:");
           if (url) format("createLink", url);
-        }}>Link</button>
+        }}>
+          Link
+        </button>
+
+        {/* PREMIUM */}
+        {isPremium && (
+          <>
+            <label style={{ marginLeft: 10 }}>
+              Text color:
+              <input
+                type="color"
+                value={textColor}
+                onChange={(e) => applyTextColor(e.target.value)}
+              />
+            </label>
+          </>
+        )}
       </div>
 
+      {/* Editor */}
       <div
         ref={editorRef}
         contentEditable
         className="editor"
+        style={{
+          minHeight: 200,
+          padding: 10,
+          border: "1px solid #ccc",
+          backgroundColor: isPremium ? bgColor : "#ffffff",
+          color: textColor
+        }}
         onInput={(e) => setContent(e.currentTarget.innerHTML)}
-      ></div>
+      />
+
+      {/* PREMIUM background */}
+      {isPremium && (
+        <div style={{ marginTop: 15 }}>
+          <label>
+            Page background:
+            <input
+              type="color"
+              value={bgColor}
+              onChange={(e) => setBgColor(e.target.value)}
+            />
+          </label>
+        </div>
+      )}
 
       <button className="primary-btn" onClick={createPage}>
         Create
