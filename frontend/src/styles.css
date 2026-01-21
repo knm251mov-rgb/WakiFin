@@ -583,3 +583,51 @@ h3 {
 .block.spoiler:hover {
   color: white;
 }
+
+/* BASE TOOLBAR */
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 0.75rem;
+  margin-bottom: 20px;
+  background: #fff;
+  border: 1px solid #fecaca;
+  border-radius: 12px;
+  box-shadow: 0 4px 14px rgba(185, 28, 28, 0.08);
+}
+
+/* TOOLBAR VARIANTS */
+.toolbar.compact {
+  padding: 0.5rem;
+}
+
+.toolbar.editor {
+  background: #fff5f5;
+}
+
+:root {
+  --red-50: #fef2f2;
+  --red-100: #fee2e2;
+  --red-300: #fca5a5;
+  --red-600: #dc2626;
+  --red-700: #b91c1c;
+  --text-main: #7f1d1d;
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    #fee2e2 25%,
+    #fca5a5 37%,
+    #fee2e2 63%
+  );
+  background-size: 400% 100%;
+  animation: shimmer 1.4s ease infinite;
+  border-radius: 8px;
+}
+
+@keyframes shimmer {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}

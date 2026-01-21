@@ -115,7 +115,7 @@ export default function PageCreate() {
 
       {/* PREMIUM background */}
       {isPremium && (
-        <div style={{ marginTop: 15 }}>
+        <div className="toolbar editor" style={{ marginTop: 15 }}>
           <label>
             Page background:
             <input
