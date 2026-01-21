@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
-const API = import.meta.env.VITE_API_BASE || "https://wakifin-api.knm251-mov.workers.dev";
+const API = import.meta.env.VITE_API_BASE || "http://localhost:3001";
 
 export default function PagesList() {
   const [pages, setPages] = useState([]);
@@ -24,13 +24,11 @@ export default function PagesList() {
   const loadPages = async () => {
     try {
       setLoading(true);
-      console.log("Loading pages from:", API);
       const res = await fetch(`${API}/pages`);
       const data = await res.json();
-      console.log("✅ Pages loaded:", data);
       setPages(data);
     } catch (err) {
-      console.error("❌ Error loading pages:", err);
+      console.error("Error loading pages:", err);
     } finally {
       setLoading(false);
     }

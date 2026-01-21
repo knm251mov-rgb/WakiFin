@@ -1,9 +1,11 @@
 const express = require("express");
 const jwt = require("jsonwebtoken");
-const User = require("../models/user");
-const { jwtSecret } = require("../configuration");
+const User = require("../models/user"); // Використовуватиме оновлену модель
+const router = new express.Router();
+const crypto = require("crypto"); // Більше не потрібен, але залишимо для прикладу
+// const crypto = require("crypto"); // <-- Ця лінія тепер зайва
 
-const router = express.Router();
+const SECRET = "MY_SECRET_TOKEN";
 
 /* ----------------------------- REGISTER ----------------------------- */
 router.post("/register", async (req, res) => {
@@ -13,17 +15,25 @@ router.post("/register", async (req, res) => {
     const exists = await User.findOne({ email });
     if (exists) return res.status(400).json({ message: "Email already registered" });
 
-    const user = new User({
+    // Поля verifyToken та isVerified більше не додаються до користувача
+    const user = await User.create({
       firstName,
       lastName,
       email,
       password,
     });
 
-    await user.save();
-    res.status(201).json({ message: "User created" });
-  } catch (e) {
-    res.status(400).json({ message: e.message });
+    res.json({
+      message: "Registered! You can now log in.",
+      user: {
+        id: user._id,
+        email: user.email,
+        role: user.role,
+        // Інші поля, окрім password
+      }
+    });
+  } catch (err) {
+    res.status(400).json({ message: err.message });
   }
 });
 
@@ -32,38 +42,52 @@ router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    console.log("🔐 Login attempt:", email);
+    if (!email || !password) {
+      return res.status(400).json({
+        message: "Missing fields",
+        details: {
+          email: email ? "OK" : "Email is missing",
+          password: password ? "OK" : "Password is missing",
+        }
+      });
+    }
 
     const user = await User.findOne({ email });
 
-    if (!user || user.password !== password) {
-      console.log("❌ Invalid credentials");
-      return res.status(401).json({ message: "Invalid credentials" });
+    if (!user) {
+      return res.status(400).json({
+        message: "User not found",
+        details: { email: "No account exists with this email" }
+      });
     }
 
-    console.log("✅ User found:", user._id);
+    if (user.password !== password) {
+      return res.status(400).json({
+        message: "Incorrect password",
+        details: {
+          expected: "Correct password",
+          received: password
+        }
+      });
+    }
+
+    // ВИДАЛЕНО: Перевірку if (!user.isVerified) більше не виконуємо.
+    // Користувач входить, якщо email та пароль правильні.
 
     const token = jwt.sign(
-      { id: user._id, email: user.email },
-      jwtSecret,
-      { expiresIn: "24h" }
+      { id: user._id, email: user.email, role: user.role },
+      SECRET,
+      { expiresIn: "7d" }
     );
 
-    console.log("✅ Token generated:", token.substring(0, 30) + "...");
+    res.json({ message: "Logged in", token, user });
 
-    res.json({
-      token,
-      user: {
-        _id: user._id,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        email: user.email,
-        role: user.role || "user",
-      },
+  } catch (err) {
+    res.status(400).json({
+      message: "Server exception",
+      details: err.message,
+      stack: err.stack,
     });
-  } catch (e) {
-    console.error("❌ Login error:", e.message);
-    res.status(400).json({ message: e.message });
   }
 });
 
