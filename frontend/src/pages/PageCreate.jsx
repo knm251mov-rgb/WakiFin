@@ -1,8 +1,11 @@
 import { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 const API = import.meta.env.VITE_API_BASE;
 
 export default function PageCreate() {
+  const navigate = useNavigate();
+
   const [title, setTitle] = useState("");
   const [summary, setSummary] = useState("");
   const [content, setContent] = useState("");
@@ -11,37 +14,43 @@ export default function PageCreate() {
 
   const editorRef = useRef(null);
 
-  /* 🔐 Отримуємо користувача з JWT */
+  /* ---------- AUTH ---------- */
   useEffect(() => {
     const token = localStorage.getItem("token");
-    if (!token) return;
+    if (!token) {
+      navigate("/login");
+      return;
+    }
 
     try {
       const payload = JSON.parse(atob(token.split(".")[1]));
       setUser(payload);
-    } catch {}
-  }, []);
+    } catch {
+      navigate("/login");
+    }
+  }, [navigate]);
 
   const isPremium = user?.role === "premium" || user?.role === "admin";
 
   /* ---------- FORMAT ---------- */
-  const cmd = (c, v = null) => {
-    document.execCommand(c, false, v);
-    editorRef.current.focus();
+  const cmd = (command, value = null) => {
+    document.execCommand(command, false, value);
+    editorRef.current?.focus();
   };
 
   /* ---------- PREMIUM: TABLE ---------- */
   const insertTable = () => {
-    if (!isPremium) return alert("Premium only");
+    if (!isPremium) return;
 
-    const rows = +prompt("Rows:", 2);
-    const cols = +prompt("Cols:", 2);
+    const rows = Number(prompt("Rows:", 2));
+    const cols = Number(prompt("Columns:", 2));
+    if (!rows || !cols) return;
 
     let html = "<table border='1'><tbody>";
     for (let r = 0; r < rows; r++) {
       html += "<tr>";
       for (let c = 0; c < cols; c++) {
-        html += "<td>...</td>";
+        html += "<td>Cell</td>";
       }
       html += "</tr>";
     }
@@ -50,20 +59,20 @@ export default function PageCreate() {
     document.execCommand("insertHTML", false, html);
   };
 
-  /* ---------- PREMIUM: CUSTOM BLOCK ---------- */
+  /* ---------- PREMIUM: BLOCKS ---------- */
   const insertBlock = (type) => {
-    if (!isPremium) return alert("Premium only");
+    if (!isPremium) return;
 
     const html = `
-      <div class="block ${type}">
-        <strong>${type.toUpperCase()}:</strong>
+      <div class="custom-block ${type}">
+        <strong>${type.toUpperCase()}</strong>
         <p>Text...</p>
       </div>
     `;
     document.execCommand("insertHTML", false, html);
   };
 
-  /* ---------- PREMIUM: IMAGE DRAG ---------- */
+  /* ---------- PREMIUM: IMAGE DROP ---------- */
   const onDropImage = (e) => {
     if (!isPremium) return;
 
@@ -76,7 +85,7 @@ export default function PageCreate() {
       document.execCommand(
         "insertHTML",
         false,
-        `<img src="${reader.result}" />`
+        `<img src="${reader.result}" alt="" />`
       );
     };
     reader.readAsDataURL(file);
@@ -90,33 +99,54 @@ export default function PageCreate() {
         "Content-Type": "application/json",
         Authorization: "Bearer " + localStorage.getItem("token"),
       },
-      body: JSON.stringify({ title, summary, content }),
+      body: JSON.stringify({
+        title,
+        summary,
+        content,
+      }),
     });
 
-    if (res.ok) location.href = "/pages";
+    if (res.ok) navigate("/pages");
   };
 
   return (
     <div className="page-container">
-      <h1>Create Page</h1>
+      <h1>Create page</h1>
 
-      <input placeholder="Title" value={title} onChange={e => setTitle(e.target.value)} />
-      <input placeholder="Summary" value={summary} onChange={e => setSummary(e.target.value)} />
+      {!isPremium && (
+        <div className="premium-hint">
+          Some editor features are available only for premium users.
+        </div>
+      )}
+
+      <input
+        placeholder="Title"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+      />
+
+      <input
+        placeholder="Summary"
+        value={summary}
+        onChange={(e) => setSummary(e.target.value)}
+      />
 
       {/* TOOLBAR */}
       <div className="toolbar">
-        <button onClick={() => cmd("bold")}>B</button>
-        <button onClick={() => cmd("italic")}>I</button>
-        <button onClick={() => cmd("underline")}>U</button>
+        <button onClick={() => cmd("bold")}>Bold</button>
+        <button onClick={() => cmd("italic")}>Italic</button>
+        <button onClick={() => cmd("underline")}>Underline</button>
 
         {isPremium && (
           <>
-            <button onClick={insertTable}>📊 Table</button>
-            <button onClick={() => insertBlock("info")}>ℹ Info</button>
-            <button onClick={() => insertBlock("warning")}>⚠ Warning</button>
-            <button onClick={() => insertBlock("lore")}>📜 Lore</button>
-            <button onClick={() => insertBlock("spoiler")}>👁 Spoiler</button>
-            <button onClick={() => setPreview(!preview)}>👁 Preview</button>
+            <button onClick={insertTable}>Table</button>
+            <button onClick={() => insertBlock("info")}>Info</button>
+            <button onClick={() => insertBlock("warning")}>Warning</button>
+            <button onClick={() => insertBlock("lore")}>Lore</button>
+            <button onClick={() => insertBlock("spoiler")}>Spoiler</button>
+            <button onClick={() => setPreview((p) => !p)}>
+              {preview ? "Edit" : "Preview"}
+            </button>
           </>
         )}
       </div>
@@ -127,9 +157,9 @@ export default function PageCreate() {
           ref={editorRef}
           contentEditable
           className="editor"
-          onInput={e => setContent(e.currentTarget.innerHTML)}
+          onInput={(e) => setContent(e.currentTarget.innerHTML)}
           onDrop={onDropImage}
-          onDragOver={e => e.preventDefault()}
+          onDragOver={(e) => e.preventDefault()}
         />
       ) : (
         <div
