@@ -1,98 +1,80 @@
 const express = require("express");
 const jwt = require("jsonwebtoken");
-const User = require("../models/user"); // Використовуватиме оновлену модель
-const router = new express.Router();
-const crypto = require("crypto"); // Більше не потрібен, але залишимо для прикладу
-// const crypto = require("crypto"); // <-- Ця лінія тепер зайва
+const User = require("../models/user");
 
-const SECRET = "MY_SECRET_TOKEN";
+const router = express.Router();
+const JWT_SECRET = "MY_SECRET_TOKEN"; // ⚠️ ВАЖЛИВО: такий же як в middleware!
 
-/* ----------------------------- REGISTER ----------------------------- */
+/* ✅ REGISTER */
 router.post("/register", async (req, res) => {
   try {
     const { firstName, lastName, email, password } = req.body;
 
-    const exists = await User.findOne({ email });
-    if (exists) return res.status(400).json({ message: "Email already registered" });
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: "Email already exists" });
+    }
 
-    // Поля verifyToken та isVerified більше не додаються до користувача
-    const user = await User.create({
+    const user = new User({
       firstName,
       lastName,
       email,
       password,
     });
 
-    res.json({
-      message: "Registered! You can now log in.",
-      user: {
-        id: user._id,
-        email: user.email,
-        role: user.role,
-        // Інші поля, окрім password
-      }
-    });
-  } catch (err) {
-    res.status(400).json({ message: err.message });
+    await user.save();
+    console.log("✅ User registered:", email);
+    res.status(201).json({ message: "User created" });
+  } catch (e) {
+    console.error("❌ Register error:", e.message);
+    res.status(400).json({ message: e.message });
   }
 });
 
-/* ------------------------------- LOGIN ------------------------------ */
+/* ✅ LOGIN */
 router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    if (!email || !password) {
-      return res.status(400).json({
-        message: "Missing fields",
-        details: {
-          email: email ? "OK" : "Email is missing",
-          password: password ? "OK" : "Password is missing",
-        }
-      });
-    }
+    console.log("🔐 Login attempt:", email);
 
     const user = await User.findOne({ email });
 
     if (!user) {
-      return res.status(400).json({
-        message: "User not found",
-        details: { email: "No account exists with this email" }
-      });
+      console.log("❌ User not found:", email);
+      return res.status(401).json({ message: "Invalid credentials" });
     }
 
     if (user.password !== password) {
-      return res.status(400).json({
-        message: "Incorrect password",
-        details: {
-          expected: "Correct password",
-          received: password
-        }
-      });
+      console.log("❌ Wrong password for:", email);
+      return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    // ВИДАЛЕНО: Перевірку if (!user.isVerified) більше не виконуємо.
-    // Користувач входить, якщо email та пароль правильні.
+    console.log("✅ User authenticated:", user._id);
 
+    // ✅ Генеруємо JWT токен
     const token = jwt.sign(
-      { id: user._id, email: user.email, role: user.role },
-      SECRET,
-      { expiresIn: "7d" }
+      { id: user._id, email: user.email },
+      JWT_SECRET,
+      { expiresIn: "24h" }
     );
 
-    res.json({ message: "Logged in", token, user });
+    console.log("✅ Token generated for:", email);
 
-  } catch (err) {
-    res.status(400).json({
-      message: "Server exception",
-      details: err.message,
-      stack: err.stack,
+    res.json({
+      token,
+      user: {
+        _id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        role: user.role || "user",
+      },
     });
+  } catch (e) {
+    console.error("❌ Login error:", e.message);
+    res.status(400).json({ message: e.message });
   }
 });
-
-
-/* -------------------------- EMAIL VERIFY ---------------------------- */
-// ВИДАЛЕНО: Роут /verify/:token більше не потрібен
 
 module.exports = router;

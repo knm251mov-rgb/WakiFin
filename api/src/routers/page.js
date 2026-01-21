@@ -7,16 +7,21 @@ const router = express.Router();
 /* ---------------- CREATE PAGE ---------------- */
 router.post("/", auth, async (req, res) => {
   try {
+    console.log("📝 POST /pages - user:", req.user.id);
+
     const page = new Page({
       title: req.body.title,
       summary: req.body.summary,
       content: req.body.content,
-      author: req.user.id, // 🔥 АВТОМАТИЧНО З JWT
+      author: req.user.id,
     });
 
     await page.save();
+    console.log("✅ Page created:", page._id);
+
     res.status(201).json(page);
   } catch (e) {
+    console.error("❌ Create page error:", e.message);
     res.status(400).json({ message: e.message });
   }
 });
@@ -28,6 +33,7 @@ router.get("/", async (req, res) => {
       .populate("author", "firstName lastName email")
       .sort({ createdAt: -1 });
 
+    console.log("📋 GET /pages - returned", pages.length, "pages");
     res.json(pages);
   } catch (e) {
     res.status(400).json({ message: e.message });
@@ -53,6 +59,8 @@ router.get("/:id", async (req, res) => {
 /* ---------------- UPDATE PAGE ---------------- */
 router.put("/:id", auth, async (req, res) => {
   try {
+    console.log("✏️ PUT /pages/:id - user:", req.user.id);
+
     const page = await Page.findById(req.params.id);
     if (!page) {
       return res.status(404).json({ message: "Page not found" });
@@ -72,8 +80,11 @@ router.put("/:id", auth, async (req, res) => {
     page.content = req.body.content || page.content;
 
     await page.save();
+    console.log("✅ Page updated:", page._id);
+
     res.json(page);
   } catch (e) {
+    console.error("❌ Update page error:", e.message);
     res.status(400).json({ message: e.message });
   }
 });
@@ -82,6 +93,8 @@ router.put("/:id", auth, async (req, res) => {
 /* ---------------- DELETE PAGE ---------------- */
 router.delete("/:id", auth, async (req, res) => {
   try {
+    console.log("🗑️ DELETE /pages/:id - user:", req.user.id);
+
     const page = await Page.findById(req.params.id);
     if (!page) {
       return res.status(404).json({ message: "Page not found" });
@@ -97,8 +110,11 @@ router.delete("/:id", auth, async (req, res) => {
     }
 
     await Page.findByIdAndDelete(req.params.id);
+    console.log("✅ Page deleted:", req.params.id);
+
     res.json({ message: "Page deleted successfully" });
   } catch (e) {
+    console.error("❌ Delete page error:", e.message);
     res.status(400).json({ message: e.message });
   }
 });
