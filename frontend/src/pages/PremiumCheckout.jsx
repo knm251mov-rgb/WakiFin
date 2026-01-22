@@ -12,9 +12,9 @@ export default function PremiumCheckout({ onSuccess }) {
 
   const validate = () => {
     if (!/^\d{16}$/.test(card.number)) return "Невірний номер картки";
-    if (!card.name) return "Вкажіть імʼя";
-    if (!/^\d{2}\/\d{2}$/.test(card.expiry)) return "MM/YY";
-    if (!/^\d{3}$/.test(card.cvv)) return "CVV 3 цифри";
+    if (!card.name) return "Вкажіть імʼя власника";
+    if (!/^\d{2}\/\d{2}$/.test(card.expiry)) return "Формат MM/YY";
+    if (!/^\d{3}$/.test(card.cvv)) return "CVV має містити 3 цифри";
     return null;
   };
 
@@ -25,36 +25,66 @@ export default function PremiumCheckout({ onSuccess }) {
       return;
     }
 
-    // 🟢 ІМІТАЦІЯ УСПІХУ
     localStorage.setItem("premium", "true");
     localStorage.setItem("premiumLevel", "pro");
-
     onSuccess();
   };
 
   return (
-    <div style={{ maxWidth: 400 }}>
-      <h2>Покупка Premium</h2>
+    <div className="premium-checkout">
+      <h2 className="premium-title">Premium доступ</h2>
+      <p className="premium-subtitle">
+        Отримайте розширені можливості та кастомізацію
+      </p>
 
-      <input placeholder="0000 0000 0000 0000"
-        onChange={e => setCard({ ...card, number: e.target.value.replace(/\s/g, "") })}
-      />
+      <div className="form-field">
+        <label>Номер картки</label>
+        <input
+          placeholder="0000 0000 0000 0000"
+          maxLength={16}
+          onChange={e =>
+            setCard({ ...card, number: e.target.value.replace(/\D/g, "") })
+          }
+        />
+      </div>
 
-      <input placeholder="Імʼя власника"
-        onChange={e => setCard({ ...card, name: e.target.value })}
-      />
+      <div className="form-field">
+        <label>Імʼя власника</label>
+        <input
+          placeholder="CARD HOLDER"
+          onChange={e => setCard({ ...card, name: e.target.value })}
+        />
+      </div>
 
-      <input placeholder="MM/YY"
-        onChange={e => setCard({ ...card, expiry: e.target.value })}
-      />
+      <div className="checkout-row">
+        <div className="form-field">
+          <label>Термін дії</label>
+          <input
+            placeholder="MM/YY"
+            maxLength={5}
+            onChange={e => setCard({ ...card, expiry: e.target.value })}
+          />
+        </div>
 
-      <input placeholder="CVV"
-        onChange={e => setCard({ ...card, cvv: e.target.value })}
-      />
+        <div className="form-field">
+          <label>CVV</label>
+          <input
+            placeholder="123"
+            maxLength={3}
+            onChange={e => setCard({ ...card, cvv: e.target.value })}
+          />
+        </div>
+      </div>
 
-      {error && <p style={{ color: "red" }}>{error}</p>}
+      {error && <div className="checkout-error">{error}</div>}
 
-      <button onClick={handlePay}>Оплатити</button>
+      <button className="primary-btn checkout-btn" onClick={handlePay}>
+        Оплатити Premium
+      </button>
+
+      <div className="checkout-note">
+        Оплата імітована. Дані не передаються на сервер.
+      </div>
     </div>
   );
 }
