@@ -5,22 +5,27 @@
   width: 100%;
   height: 64px;
   background: #ffffff;
-  padding: 0 1.5rem;
-
-  box-sizing: border-box; /* 🔥 КЛЮЧ */
-
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  border-bottom: 1px solid #fecaca;
   z-index: 1000;
 }
 
+.navbar-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  height: 100%;
+  padding: 0 1.5rem;
 
-.navbar-logo {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #dc2626;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.navbar-logo a {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #b91c1c;
+  text-decoration: none;
+  letter-spacing: 0.3px;
 }
 
 .navbar-links {
@@ -34,15 +39,33 @@
 
 .navbar-links a {
   text-decoration: none;
-  color: #111827;
-  font-weight: 500;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #7f1d1d;
+  transition: color 0.15s ease;
 }
 
 .navbar-links a:hover {
   color: #dc2626;
 }
 
-/* ---------- ACCOUNT ---------- */
+/* PREMIUM LINK */
+
+.premium-link {
+  padding: 0.4rem 0.8rem;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #dc2626, #b91c1c);
+  color: white !important;
+  font-weight: 700;
+  font-size: 0.85rem;
+  box-shadow: 0 4px 10px rgba(185, 28, 28, 0.25);
+}
+
+.premium-link:hover {
+  background: linear-gradient(180deg, #b91c1c, #991b1b);
+}
+
+/* ACCOUNT */
 
 .account-menu {
   position: relative;
@@ -51,44 +74,60 @@
 .account-btn {
   background: none;
   border: none;
-  font-weight: 600;
-  color: #16a34a;
   cursor: pointer;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #7f1d1d;
+  padding: 0.4rem 0.6rem;
+  border-radius: 6px;
+  transition: background 0.15s ease;
 }
 
-/* ---------- DROPDOWN ---------- */
+.account-btn:hover {
+  background: #fee2e2;
+}
+
+.account-btn.premium {
+  color: #991b1b;
+}
+
+/* DROPDOWN */
 
 .account-dropdown {
   position: absolute;
   right: 0;
-  top: 130%;
-  background: white;
+  top: calc(100% + 10px);
+  min-width: 180px;
+
+  background: #ffffff;
+  border: 1px solid #fecaca;
   border-radius: 10px;
-  box-shadow: 0 12px 30px rgba(0,0,0,0.18);
-  min-width: 160px;
+  box-shadow: 0 12px 28px rgba(185, 28, 28, 0.18);
+
   padding: 0.4rem;
 }
 
 .dropdown-item {
   display: block;
   width: 100%;
-  padding: 0.6rem 0.8rem;
-  text-decoration: none;
+  padding: 0.55rem 0.75rem;
+  border-radius: 6px;
   background: none;
   border: none;
   text-align: left;
+
   font-size: 0.9rem;
+  font-weight: 600;
+  color: #7f1d1d;
   cursor: pointer;
-  border-radius: 6px;
-  color: #111827;
+  text-decoration: none;
+  transition: background 0.15s ease;
 }
 
 .dropdown-item:hover {
-  background: #f3f4f6;
+  background: #fee2e2;
 }
 
-.logout {
-  color: #dc2626;
-  font-weight: 600;
+.dropdown-item.logout {
+  color: #b91c1c;
 }

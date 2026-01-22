@@ -6,10 +6,8 @@ export default function Navbar({ user, onLogout }) {
   const [open, setOpen] = useState(false);
   const menuRef = useRef(null);
 
-  // 🔥 перевірка premium
   const isPremium = localStorage.getItem("premium") === "true";
 
-  // Закриваємо dropdown при кліку поза ним
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (menuRef.current && !menuRef.current.contains(e.target)) {
@@ -23,94 +21,77 @@ export default function Navbar({ user, onLogout }) {
 
   return (
     <nav className="navbar">
-      <div className="navbar-logo">WakiFin</div>
+      <div className="navbar-inner">
+        <div className="navbar-logo">
+          <Link to="/">WakiFin</Link>
+        </div>
 
-      <ul className="navbar-links">
-        <li><Link to="/">Home</Link></li>
+        <ul className="navbar-links">
+          <li><Link to="/">Home</Link></li>
+          <li><Link to="/pages">Pages</Link></li>
+          <li><Link to="/about">About</Link></li>
 
-        {user?.role === "admin" && (
-          <li>
-            <Link to="/users">Users</Link>
-          </li>
-        )}
+          {user?.role === "admin" && (
+            <li><Link to="/users">Users</Link></li>
+          )}
 
-        <li><Link to="/pages">Pages</Link></li>
-        <li><Link to="/about">About</Link></li>
+          {user && !isPremium && (
+            <li>
+              <Link to="/premium" className="premium-link">
+                Get Premium
+              </Link>
+            </li>
+          )}
 
-        {/* ⭐ PREMIUM */}
-        {user && !isPremium && (
-          <li>
-            <Link
-              to="/premium"
-              style={{
-                color: "gold",
-                fontWeight: "bold"
-              }}
-            >
-              ⭐ Get Premium
-            </Link>
-          </li>
-        )}
+          {!user ? (
+            <>
+              <li><Link to="/login">Login</Link></li>
+              <li><Link to="/register">Register</Link></li>
+            </>
+          ) : (
+            <li className="account-menu" ref={menuRef}>
+              <button
+                className={`account-btn ${isPremium ? "premium" : ""}`}
+                onClick={() => setOpen(o => !o)}
+              >
+                {user.email}
+              </button>
 
-        {!user ? (
-          <>
-            <li><Link to="/login">Login</Link></li>
-            <li><Link to="/register">Register</Link></li>
-          </>
-        ) : (
-          <li className="account-menu" ref={menuRef}>
-            <button
-              className="account-btn"
-              onClick={() => setOpen(o => !o)}
-            >
-              {user.email}
-              {isPremium && (
-                <span
-                  style={{
-                    marginLeft: "6px",
-                    color: "gold",
-                    fontWeight: "bold"
-                  }}
-                >
-                  ⭐
-                </span>
-              )}
-            </button>
-
-            {open && (
-              <div className="account-dropdown">
-                <Link
-                  to="/profile"
-                  className="dropdown-item"
-                  onClick={() => setOpen(false)}
-                >
-                  Profile
-                </Link>
-
-                {isPremium && (
+              {open && (
+                <div className="account-dropdown">
                   <Link
-                    to="/premium/content"
+                    to="/profile"
                     className="dropdown-item"
                     onClick={() => setOpen(false)}
                   >
-                    Premium Content
+                    Profile
                   </Link>
-                )}
 
-                <button
-                  className="dropdown-item logout"
-                  onClick={() => {
-                    setOpen(false);
-                    onLogout();
-                  }}
-                >
-                  Logout
-                </button>
-              </div>
-            )}
-          </li>
-        )}
-      </ul>
+                  {isPremium && (
+                    <Link
+                      to="/premium/content"
+                      className="dropdown-item"
+                      onClick={() => setOpen(false)}
+                    >
+                      Premium Content
+                    </Link>
+                  )}
+
+                  <button
+                    className="dropdown-item logout"
+                    onClick={() => {
+                      setOpen(false);
+                      onLogout();
+                    }}
+                  >
+                    Logout
+                  </button>
+                </div>
+              )}
+            </li>
+          )}
+        </ul>
+      </div>
     </nav>
   );
 }
