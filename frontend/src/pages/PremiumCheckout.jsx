@@ -81,10 +81,6 @@ export default function PremiumCheckout({ onSuccess }) {
       <button className="primary-btn checkout-btn" onClick={handlePay}>
         Оплатити Premium
       </button>
-
-      <div className="checkout-note">
-        Оплата імітована. Дані не передаються на сервер.
-      </div>
     </div>
   );
 }
