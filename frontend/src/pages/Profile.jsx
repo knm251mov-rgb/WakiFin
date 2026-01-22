@@ -1,14 +1,18 @@
-import { useEffect, useState } from "react";
-import { useRouter } from "next/router";
+import { useState, useEffect } from "react";
 
 export default function Profile({ user, onLogout }) {
-  const router = useRouter();
   const [isPremium, setIsPremium] = useState(false);
 
   useEffect(() => {
-    const premium = localStorage.getItem("premium");
-    setIsPremium(premium === "true");
+    const premium = localStorage.getItem("premium") === "true";
+    setIsPremium(premium);
   }, []);
+
+  const cancelPremium = () => {
+    localStorage.removeItem("premium");
+    localStorage.removeItem("premiumLevel");
+    setIsPremium(false);
+  };
 
   if (!user) {
     return (
@@ -31,12 +35,12 @@ export default function Profile({ user, onLogout }) {
       }}
     >
       <h2>User Profile</h2>
-      <p>Manage your account and subscription settings.</p>
+      <p>Here you can manage your account settings.</p>
 
       {/* USER INFO */}
       <div
         style={{
-          border: "1px solid #ccc",
+          border: "1px solid #ddd",
           padding: "1.5rem",
           borderRadius: "8px",
           marginTop: "1.5rem",
@@ -59,53 +63,64 @@ export default function Profile({ user, onLogout }) {
         </p>
       </div>
 
-      {/* PREMIUM BLOCK */}
+      {/* PREMIUM INFO */}
       <div
         style={{
-          marginTop: "2rem",
+          border: "1px solid",
+          borderColor: isPremium ? "#16a34a" : "#ddd",
           padding: "1.5rem",
           borderRadius: "8px",
-          border: isPremium ? "1px solid #16a34a" : "1px solid #dc2626",
-          background: isPremium ? "#f0fdf4" : "#fff5f5",
+          marginTop: "1.5rem",
+          background: isPremium ? "#f0fdf4" : "#fafafa",
         }}
       >
         <h3>Subscription</h3>
 
         {isPremium ? (
           <>
-            <p>
-              <strong>Status:</strong>{" "}
-              <span style={{ color: "#16a34a", fontWeight: 600 }}>
-                Premium active
-              </span>
+            <p style={{ color: "#166534", fontWeight: 600 }}>
+              Premium account is active
             </p>
-            <p>You have access to all premium features.</p>
-          </>
-        ) : (
-          <>
-            <p>
-              <strong>Status:</strong>{" "}
-              <span style={{ color: "#dc2626", fontWeight: 600 }}>
-                Free account
-              </span>
-            </p>
-            <p>Upgrade to Premium to unlock advanced features.</p>
+            <ul style={{ paddingLeft: "1.2rem" }}>
+              <li>Access to exclusive content</li>
+              <li>Advanced filters and sorting</li>
+              <li>Custom themes</li>
+            </ul>
 
             <button
-              onClick={() => router.push("/premium")}
+              onClick={cancelPremium}
               style={{
                 marginTop: "1rem",
-                padding: "10px 20px",
+                padding: "8px 16px",
                 borderRadius: "6px",
                 border: "none",
                 background: "#dc2626",
-                color: "white",
-                fontWeight: 600,
+                color: "#fff",
                 cursor: "pointer",
+                fontWeight: 600,
               }}
             >
-              Get Premium
+              Cancel Premium
             </button>
+          </>
+        ) : (
+          <>
+            <p>You are using a free account.</p>
+            <a
+              href="/premium"
+              style={{
+                display: "inline-block",
+                marginTop: "0.8rem",
+                padding: "8px 16px",
+                borderRadius: "6px",
+                background: "#2563eb",
+                color: "#fff",
+                textDecoration: "none",
+                fontWeight: 600,
+              }}
+            >
+              Upgrade to Premium
+            </a>
           </>
         )}
       </div>
@@ -118,9 +133,9 @@ export default function Profile({ user, onLogout }) {
           padding: "10px 20px",
           borderRadius: "6px",
           border: "none",
-          background: "#7f1d1d",
+          background: "#ff0000",
           color: "white",
-          fontWeight: 600,
+          fontWeight: "600",
           cursor: "pointer",
           width: "100%",
         }}
